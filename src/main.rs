@@ -5,16 +5,17 @@ mod models;
 mod response;
 mod route;
 mod schema;
-use axum::{response::IntoResponse, routing::get, Json, Router};
-use db::DB;
-use dotenv::dotenv;
-use error::MyError;
-use tower_http::cors::CorsLayer;
-use std::sync::Arc;
 use axum::http::{
     header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},
     HeaderValue, Method,
 };
+use axum::{response::IntoResponse, routing::get, Json, Router};
+use db::DB;
+use dotenv::dotenv;
+use error::MyError;
+use route::create_router;
+use std::sync::Arc;
+use tower_http::cors::CorsLayer;
 
 pub struct AppState {
     db: DB,
@@ -41,9 +42,8 @@ async fn main() -> Result<(), MyError> {
         .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::DELETE])
         .allow_credentials(true)
         .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE]);
-    let app = Router::new()
-        .route("/api/healthchecker", get(health_checker_handler))
-        .with_state(Arc::new(AppState { db: db.clone() }));
+
+    let app = create_router(Arc::new(AppState { db: db.clone() })).layer(cors);
     println!("🚀 Server started successfully");
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
