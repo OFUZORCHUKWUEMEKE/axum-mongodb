@@ -78,7 +78,7 @@ impl DB {
             updatedAt: note.updatedAt,
         };
 
-        Ok(note_response);
+        Ok(note_response)
     }
 
     fn create_note_document(
